@@ -1,25 +1,19 @@
-param(
-    [string]$ExePath = ".\hello.exe",      # exe のパス（デフォルト: カレントにある myapp.exe）
-    [string]$ShortcutPath = "$env:USERPROFILE\Desktop\hello.lnk"  # ショートカット保存先（デフォルト: デスクトップ）
-)
+# create_shortcut.ps1
+# hello.exe と同じフォルダ内に run_hello.bat がある前提
 
-# WScript.Shell COM オブジェクトを作成
-$WshShell = New-Object -ComObject WScript.Shell
+$baseDir   = Split-Path -Parent $MyInvocation.MyCommand.Path
+$batPath   = Join-Path $baseDir "run_hello.bat"
+$exePath   = Join-Path $baseDir "hello.exe"
+$lnkPath   = Join-Path $baseDir "run_hello.lnk"
 
-# ショートカットを作成
-$Shortcut = $WshShell.CreateShortcut($ShortcutPath)
+$WshShell  = New-Object -ComObject WScript.Shell
+$shortcut  = $WshShell.CreateShortcut($lnkPath)
 
-# exe のフルパスを設定
-$Shortcut.TargetPath = (Resolve-Path $ExePath).Path
+$shortcut.TargetPath   = $batPath
+$shortcut.WorkingDirectory = $baseDir
+$shortcut.WindowStyle  = 7   # 最小化
+$shortcut.IconLocation = $exePath  # hello.exe のアイコンを使用
 
-# 作業フォルダを exe のフォルダに
-$Shortcut.WorkingDirectory = Split-Path $ExePath -Parent
+$shortcut.Save()
 
-# 最小化で起動するように設定（7 = 最小化）
-$Shortcut.WindowStyle = 7
-
-# アイコンを exe と同じにする
-$Shortcut.IconLocation = $Shortcut.TargetPath
-
-# 保存
-$Shortcut.Save()
+Write-Output "Shortcut created: $lnkPath"
